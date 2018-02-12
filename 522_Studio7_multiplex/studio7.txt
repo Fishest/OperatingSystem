@@ -1,0 +1,97 @@
+Name: Zimu Wang, Wei Weng, Diqiu Zhou
+
+2.
+hijhiji
+read:h
+read:i
+read:j
+read:h
+read:i
+read:j
+read:i
+read:
+
+EOF reached
+
+3.
+On the server:
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+STDIN_FILENO: 0SOCKET: 3Writing to a new client
+
+On the client:
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./client
+Before connect
+After connect
+Message: tencharac
+
+
+
+4.
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+ret: 1Client request received
+Message: tencharac
+Message: tencharac
+Message: tencharac
+EOF reached
+
+5.
+On server:
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+fdhsakhdfjk
+ret: 1read:f
+ret: 1read:d
+ret: 1read:h
+ret: 1read:s
+ret: 1read:a
+ret: 1read:k
+ret: 1read:h
+ret: 1read:d
+ret: 1read:f
+ret: 1read:j
+ret: 1read:k
+ret: 1read:
+
+ret: 1EOF reached
+fjalksdjf
+3uenkensd
+ret: 1Client request received
+Message: tencharac
+Message: tencharac
+Quiting
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ fjalksdjf
+bash: fjalksdjf: command not found
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ 3uenkensd
+bash: 3uenkensd: command not found
+
+On client:
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./client
+Before connect
+After connect
+Writing to a server
+
+6.(a)
+bledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledata availabledat^C
+
+because the data is never consumed, it will always report as ready.
+
+(b)
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+fjdsa
+fjqwije
+dflkascl
+eqwiuoe
+
+
+^C
+Looks like because the it is edge-triggered, so because the initial data is not read, the second 
+call in the while loop will hang.
+
+Further Experiment:
+pi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+empty readin: Success
+Something returnedpi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ ./server
+fjdslkadfj
+empty readin: Success
+Something returneddata availablepi@raspberrypi:~/Desktop/Operating System/522_Studio7_multiplex $ fjdslkadfj
+bash: fjdslkadfj: command not found
+

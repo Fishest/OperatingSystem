@@ -1,0 +1,86 @@
+Name: Zimu Wang
+2. Output: 
+[zimu.wang@shell 422Studio3]$ ./lib_call 
+User ID 1846110
+Error, setuid failed, Operation not permitted
+User ID after 1846110
+3. 
+pi@raspberrypi:~/Desktop/Operating System/422Studio3 $ ./lib_call 
+User ID 1000
+Error, setuid failed, Operation not permitted
+User ID after 1000
+The user ID is noticibly different.
+4. 
+On linux shell:
+[zimu.wang@shell 422Studio3]$ ./native_call 
+User ID 1846110
+Error, setuid failed, Operation not permitted
+User ID after 1846110
+On Pi:
+pi@raspberrypi:~/Desktop/Operating System/422Studio3 $ ./native_call 
+User ID 1000
+Error, setuid failed, Operation not permitted
+User ID after 1000
+5. 
+asmlinkage long sys_studio3_void(void);
+    
+asmlinkage long sys_studio3_int(int cmd);
+
+6.
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/sched.h>
+#include <linux/syscalls.h>
+
+//Define a system call implementation that takes no arguments
+SYSCALL_DEFINE1(studio3_int, int, cmd){
+//
+//  // print out a simple message indicating the function was called, and return SUCCESS
+        printk("Input number %d", cmd);
+        return 0;
+}
+
+7.
+obj-y		:= elf.o entry-common.o irq.o opcodes.o \
+		   process.o ptrace.o reboot.o return_address.o \
+		   setup.o signal.o sigreturn_codes.o \
+		   stacktrace.o sys_arm.o time.o traps.o sys_studio3_void.o sys_studio3_int.o
+
+8. 
+--- unistd.h	2018-02-04 17:44:14.345430514 -0600
++++ unistd.h.020418	2018-02-04 17:43:44.349122051 -0600
+@@ -19,7 +19,7 @@
+  * This may need to be greater than __NR_last_syscall+1 in order to
+  * account for the padding in the syscall table
+  */
+-#define __NR_syscalls  (396)
++#define __NR_syscalls  (392)
+ 
+ #define __ARCH_WANT_STAT64
+ #define __ARCH_WANT_SYS_GETHOSTNAME
+
+--- calls.S	2018-02-04 17:43:15.889880635 -0600
++++ calls.S.020418	2018-02-04 17:42:17.690341924 -0600
+@@ -400,9 +400,6 @@
+ 		CALL(sys_userfaultfd)
+ 		CALL(sys_membarrier)
+ 		CALL(sys_mlock2)
+-		CALL(sys_studio3_void)
+-		CALL(sys_studio3_int)
+-
+ #ifndef syscalls_counted
+ .equ syscalls_padding, ((NR_syscalls + 3) & ~3) - NR_syscalls
+ #define syscalls_counted
+
+9. 
+pi@raspberrypi:~ $ uname -a
+Linux raspberrypi 4.4.9-v7 #5 SMP Sun Feb 4 18:42:19 CST 2018 armv7l GNU/Linux
+
+10.
+[  776.787616] Someone invoked the sys_noargs system callSomeone invoked the sys_studio3_int system call with integer 0
+[  864.311201] Someone invoked the sys_noargs system call
+[  864.311596] Someone invoked the sys_studio3_int system call with integer 0Someone invoked the sys_noargs system callSomeone invoked the sys_studio3_int system call with integer 0
+[  875.968655] Someone invoked the sys_noargs system call
+[  875.969035] Someone invoked the sys_studio3_int system call with integer 0
+[  876.592794] Someone invoked the sys_noargs system call
+

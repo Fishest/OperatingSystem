@@ -1,0 +1,42 @@
+1. Name: Zimu Wang
+2. 
+pi@raspberrypi:~/Desktop/Operating System/422_studio7_zimuwang $ ./simple_fork this is the parent process
+parent with 1810 child id
+child with 1810 id and 1809 parent id
+
+3. 
+pi@raspberrypi:~/Desktop/Operating System/422_studio7_zimuwang $ gcc tree_fork.c -o tree
+pi@raspberrypi:~/Desktop/Operating System/422_studio7_zimuwang $ ./tree 4pid: 3147, generation: 1
+pid: 3148, generation: 2
+pid: 3150, generation: 3
+pid: 3149, generation: 2
+pid: 3154, generation: 3
+pid: 3155, generation: 3
+pid: 3151, generation: 3
+pid: 3159, generation: 4
+pid: 3152, generation: 4
+pid: 3153, generation: 4
+pid: 3161, generation: 4
+pid: 3160, generation: 4
+pid: 3157, generation: 4
+pid: 3156, generation: 4
+pid: 3158, generation: 4
+
+4.
+root@raspberrypi:/sys/kernel/kobject_example# dmesg
+[ 2311.549162] original bar 0, after modification 10
+[ 2321.789455] Original foo 0
+[ 2321.789477] foo after modification 10
+[ 2339.991851] Original baz 0, after modification 10
+
+
+5.
+root@raspberrypi:/sys/kernel/fam_reader# dmesg
+[ 1266.289162] bash: 1042
+[ 1266.289185] x-terminal-emul: 1020
+[ 1266.289198] openbox: 756
+[ 1266.289203] lxsession: 671
+[ 1266.289212] lightdm: 657
+[ 1266.289217] lightdm: 544
+
+The last one would be init

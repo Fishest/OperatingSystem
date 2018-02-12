@@ -1,0 +1,49 @@
+1. Name: Zimu Wang
+2. 
+#include <stdio.h>
+
+int main(void) {
+	return 0;
+}
+
+3. 
+man -s 2 access
+Access function checks user's permissions for a file
+
+man -s 2 mmap2
+mmap2 function map files or devices into memory
+
+4. 
+the write system call is invoked 
+
+5.
+In the dense300 function, mmap is called more times, while brk in dense100 is called more.
+Because dense300 uses more memory to store the matrices.
+
+6.
+Similarly, the one with smaller size has more brk function calls. The one with larger size 
+has more mmap2 function calls to allocate that much memory.
+
+7.
+About 5 seconds. Didn't really pay attension to it.
+
+8.
+000: 1
+001: 29
+002: 2
+003: 15~
+
+9.
+sched_switch and lxterminal
+
+10.
+It seems like sched_switch preempted the task
+
+11.
+Core 2 was doing trace-cmd and dense_mm most of the time, sched_switch almost never happened
+Core 0 was idle
+Core 1 was doing low level work I assume, with fair amount of sched_switch
+Core 3 was doing Xorg, similar to Core 1
+
+12.
+At the beginning, I think scheduler is working to distribute the tasks to cores.

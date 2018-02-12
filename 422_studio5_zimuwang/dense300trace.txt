@@ -1,0 +1,60 @@
+execve("./dense_mm", ["./dense_mm", "300"], [/* 55 vars */]) = 0
+brk(0)                                  = 0x328000
+uname({sys="Linux", node="raspberrypi", ...}) = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76f73000
+access("/etc/ld.so.preload", R_OK)      = 0
+open("/etc/ld.so.preload", O_RDONLY|O_CLOEXEC) = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=42, ...}) = 0
+mmap2(NULL, 42, PROT_READ|PROT_WRITE, MAP_PRIVATE, 3, 0) = 0x76f72000
+close(3)                                = 0
+open("/usr/lib/arm-linux-gnueabihf/libarmmem.so", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0(\0\1\0\0\0h\5\0\0004\0\0\0"..., 512) = 512
+lseek(3, 17960, SEEK_SET)               = 17960
+read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+lseek(3, 17696, SEEK_SET)               = 17696
+read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\3\f\1\22\4\24"..., 47) = 47
+fstat64(3, {st_mode=S_IFREG|0644, st_size=18920, ...}) = 0
+mmap2(NULL, 83236, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x76f31000
+mprotect(0x76f36000, 61440, PROT_NONE)  = 0
+mmap2(0x76f45000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x4000) = 0x76f45000
+mprotect(0x7ecfe000, 4096, PROT_READ|PROT_WRITE|PROT_EXEC|PROT_GROWSDOWN) = 0
+close(3)                                = 0
+munmap(0x76f72000, 42)                  = 0
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=76574, ...}) = 0
+mmap2(NULL, 76574, PROT_READ, MAP_PRIVATE, 3, 0) = 0x76f1e000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/arm-linux-gnueabihf/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0(\0\1\0\0\0L\204\1\0004\0\0\0"..., 512) = 512
+lseek(3, 1239936, SEEK_SET)             = 1239936
+read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2840) = 2840
+lseek(3, 1236500, SEEK_SET)             = 1236500
+read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+fstat64(3, {st_mode=S_IFREG|0755, st_size=1242776, ...}) = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76f72000
+mmap2(NULL, 1312152, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x76ddd000
+mprotect(0x76f08000, 65536, PROT_NONE)  = 0
+mmap2(0x76f18000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x12b000) = 0x76f18000
+mmap2(0x76f1b000, 9624, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x76f1b000
+close(3)                                = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76f71000
+set_tls(0x76f714c0, 0x76f71ba8, 0x76f76050, 0x76f714c0, 0x76f76050) = 0
+mprotect(0x76f18000, 8192, PROT_READ)   = 0
+mprotect(0x76f31000, 20480, PROT_READ|PROT_WRITE) = 0
+mprotect(0x76f31000, 20480, PROT_READ|PROT_EXEC) = 0
+cacheflush(0x76f31000, 0x76f36000, 0, 0x15, 0x7ecfdc80) = 0
+mprotect(0x76f75000, 4096, PROT_READ)   = 0
+munmap(0x76f1e000, 76574)               = 0
+fstat64(1, {st_mode=S_IFREG|0644, st_size=3226, ...}) = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76f70000
+mmap2(NULL, 720896, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76d2d000
+mmap2(NULL, 720896, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76c7d000
+mmap2(NULL, 720896, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76bcd000
+write(1, "Generating matrices...\nMultiplyi"..., 68Generating matrices...
+Multiplying matrices...
+Multiplication done!
+) = 68
+exit_group(0)                           = ?
++++ exited with 0 +++

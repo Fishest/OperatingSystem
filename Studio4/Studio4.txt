@@ -1,0 +1,29 @@
+Name: Zimu Wang, Wei Weng, Diqiu Zhou
+2. Output:
+pi@raspberrypi:~/Desktop/Operating System/Studio4 $ ./pipe
+studio4 for cse522
+
+3. Output:
+pi@raspberrypi:~/Desktop/Operating System/Studio4 $ ./fifo
+my_message
+
+4. Output:
+pi@raspberrypi:~/Desktop/Operating System/Studio4 $ ./fifo
+200
+
+with the other teminal inputting echo "100" > tmp.file
+
+5. Output:
+200
+198
+200
+200
+200
+198
+198
+200
+198
+So the other terminal is doing ./fifo_even, which writes 100 to the fifo
+The third one is running ./fifo_odd, which writes 99 to the fifo
+fifo program is taking input and doubling it.
+

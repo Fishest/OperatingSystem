@@ -1,0 +1,81 @@
+1. Name: Zimu Wang
+2. 
+[zimu.wang@linuxlab006 kernel]$ make -C $LINUX_SOURCE ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- SUBDIRS=$PWD modules
+make: Entering directory `/tmp/compile/zimu.wang/linux'
+  CC [M]  /tmp/compile/zimu.wang/kernel/simple_module.o
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /tmp/compile/zimu.wang/kernel/simple_module.mod.o
+  LD [M]  /tmp/compile/zimu.wang/kernel/simple_module.ko
+make: Leaving directory `/tmp/compile/zimu.wang/linux'
+
+3.
+pi@raspberrypi:~/Desktop/kernel_modules $ sudo dmesg --clear
+pi@raspberrypi:~/Desktop/kernel_modules $ sudo insmod simple_module.ko
+pi@raspberrypi:~/Desktop/kernel_modules $ dmesg
+[ 3871.145286] simple module initialized
+
+4.
+pi@raspberrypi:~/Desktop/kernel_modules $ lsmod
+Module                  Size  Used by
+simple_module            976  0 
+tun                    18592  2 
+bnep                   10592  2 
+hci_uart               19216  1 
+btbcm                   6181  1 hci_uart
+bluetooth             336951  22 bnep,btbcm,hci_uart
+brcmfmac              186926  0 
+brcmutil                5901  1 brcmfmac
+cfg80211              437818  1 brcmfmac
+rfkill                 16728  4 cfg80211,bluetooth
+joydev                  9373  0 
+snd_bcm2835            20452  1 
+snd_pcm                77450  1 snd_bcm2835
+snd_timer              19590  1 snd_pcm
+snd                    53776  5 snd_bcm2835,snd_timer,snd_pcm
+bcm2835_gpiomem         3211  0 
+bcm2835_wdt             3434  0 
+evdev                  11567  10 
+uio_pdrv_genirq         3202  0 
+uio                     8416  1 uio_pdrv_genirq
+i2c_dev                 6372  0 
+fuse                   85884  3 
+ipv6                  352413  58
+
+5.
+pi@raspberrypi:~/Desktop/kernel_modules $ sudo rmmod simple_module.ko
+pi@raspberrypi:~/Desktop/kernel_modules $ lsmod
+Module                  Size  Used by
+tun                    18592  2 
+bnep                   10592  2 
+hci_uart               19216  1 
+btbcm                   6181  1 hci_uart
+bluetooth             336951  22 bnep,btbcm,hci_uart
+brcmfmac              186926  0 
+brcmutil                5901  1 brcmfmac
+cfg80211              437818  1 brcmfmac
+rfkill                 16728  4 cfg80211,bluetooth
+joydev                  9373  0 
+snd_bcm2835            20452  1 
+snd_pcm                77450  1 snd_bcm2835
+snd_timer              19590  1 snd_pcm
+snd                    53776  5 snd_bcm2835,snd_timer,snd_pcm
+bcm2835_gpiomem         3211  0 
+bcm2835_wdt             3434  0 
+evdev                  11567  10 
+uio_pdrv_genirq         3202  0 
+uio                     8416  1 uio_pdrv_genirq
+i2c_dev                 6372  0 
+fuse                   85884  3 
+ipv6                  352413  58 
+
+It's gone
+
+6.
+pi@raspberrypi:~/Desktop/kernel_modules $ sudo insmod jiffies_module.ko 
+pi@raspberrypi:~/Desktop/kernel_modules $ dmesg
+[ 5135.236518] simple module initialized with 483516 jiffies
+pi@raspberrypi:~/Desktop/kernel_modules $ sudo rmmod jiffies_module.ko
+pi@raspberrypi:~/Desktop/kernel_modules $ dmesg
+[ 5135.236518] simple module initialized with 483516 jiffies
+[ 5158.263563] simple module is being unloaded with 485819 jiffies

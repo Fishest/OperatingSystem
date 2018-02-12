@@ -16,14 +16,22 @@ int main() {
 	}
 	//char mystring [100];
 	int input;
-	/*
+	/* //This part is for problem 3
 	while (fgets(mystring, 100, rFile) != NULL) {
 		puts(mystring);
 		printf("%s\n", mystring);
 	}
 	*/
+
+	/* // This part is for problem 4
 	fscanf(rFile, "%d", &input);
 	printf("%d\n", 2 * input);
+	*/
+
+	// This part is for problem 5
+	while (fscanf(rFile, "%d", &input) != 0) {
+		printf("%d\n", 2 * input);
+	}
 	fclose(rFile);
 	
 	return 0;

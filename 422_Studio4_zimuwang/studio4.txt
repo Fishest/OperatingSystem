@@ -1,0 +1,187 @@
+Name: Zimu Wang
+
+2. 
+dense_mm: dense matrix multiplication
+parallel_dense_mm: dense matrix multiplication using parallel
+sing: sing a song for a inputable number of times
+sort: sort a randomly generated array
+
+3.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./dense_mm 100
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+real 0.13
+user 0.12
+sys 0.01
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./dense_mm 100
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+real 0.10
+user 0.10
+sys 0.00
+
+
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./parallel_dense_mm 100
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+real 0.10
+user 0.21
+sys 0.00
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./parallel_dense_mm 100
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+real 0.08
+user 0.16
+sys 0.02
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./parallel_dense_mm 100
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+real 0.05
+user 0.09
+sys 0.00
+
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./sing 5
+The Road goes ever on and on
+Down from the door where it began.
+Now far ahead the Road has gone,
+And I must follow, if I can,
+Pursuing it with eager feet,
+Until it joins some larger way,
+Where many paths and errands meet.
+And whither then? I cannot say.
+-Bilbo, The Lord of the Rings
+The Road goes ever on and on
+Down from the door where it began.
+Now far ahead the Road has gone,
+And I must follow, if I can,
+Pursuing it with eager feet,
+Until it joins some larger way,
+Where many paths and errands meet.
+And whither then? I cannot say.
+-Bilbo, The Lord of the Rings
+The Road goes ever on and on
+Down from the door where it began.
+Now far ahead the Road has gone,
+And I must follow, if I can,
+Pursuing it with eager feet,
+Until it joins some larger way,
+Where many paths and errands meet.
+And whither then? I cannot say.
+-Bilbo, The Lord of the Rings
+The Road goes ever on and on
+Down from the door where it began.
+Now far ahead the Road has gone,
+And I must follow, if I can,
+Pursuing it with eager feet,
+Until it joins some larger way,
+Where many paths and errands meet.
+And whither then? I cannot say.
+-Bilbo, The Lord of the Rings
+The Road goes ever on and on
+Down from the door where it began.
+Now far ahead the Road has gone,
+And I must follow, if I can,
+Pursuing it with eager feet,
+Until it joins some larger way,
+Where many paths and errands meet.
+And whither then? I cannot say.
+-Bilbo, The Lord of the Rings
+real 0.00
+user 0.00
+sys 0.00
+
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./sort 10000
+Generating array...
+Sorting array...
+Sort done!
+real 0.02
+user 0.02
+sys 0.00
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./sort 10000
+Generating array...
+Sorting array...
+Sort done!
+real 0.01
+user 0.01
+sys 0.00
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time -p ./sort 10000
+Generating array...
+Sorting array...
+Sort done!
+real 0.02
+user 0.02
+sys 0.00
+
+4. 
+According to help time, the time function returns the real time, user CPU time and system CPU time. 
+Real = user + system 
+user: time spent in user-space
+systemL time spent in kernel-space
+
+5.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time ./dense_mm 400
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m5.650s
+user	0m5.610s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time ./parallel_dense_mmdense_mm 400
+bash: ./parallel_dense_mmdense_mm: No such file or directory
+
+real	0m0.004s
+user	0m0.000s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ time ./parallel_dense_mm 400
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m1.658s
+user	0m6.070s
+sys	0m0.000s
+
+The real time is shorter when using parallel_dense_mm, and it makes sense because it uses multiple thread. 
+However, the total time used is almost the same, with parallel_dense_mm being a bit higher because it involves
+scheduling and actually distributing the work.
+
+6.
+Based on several runs, it seems like the kernel-space time usage is higher than user-space usage. As
+most of the work of the program is printing out things to standard output, it uses kernel-space more often
+
+7. 
+CLOCK+MONOTONIC would be good for user-space as it is not affected by system clock jumping around
+CLOCK_REALTIME_COARSE would be bad because it is coarse, and bad for measuring in particular small programs,
+and it is affected by discontinuity in system clock.
+
+8.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ ./getres
+CLOCK_REALTIME: seconds=0, nano_sec=1
+CLOCK_REALTIME_COARSE: seconds=0, nano_sec=10000000
+CLOCK_MONOTONIC: seconds=0, nano_sec=1
+CLOCK_MONOTONIC_COARSE: seconds=0, nano_sec=10000000
+
+9.
+The difference should be in the frequency. REALTIME is on the nano_sec level, while coarse ones are operating at 1sec/(10000000nanosecond) Hz
+
+10.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ ./measureTime
+2083
+Calling the clock_gettime twice and record two time signatures. It makes sense that the time clock_gettime
+takes will be the difference between the two. However, this involves a gap between function execution so there might be error.
+
+11.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio4_zimuwang $ ./timed_parallel_dense_mm 100 100
+Generating matrices...
+Multiplying matrices...
+Min time: 59444943
+Max time: 101014521
+Average time: 60237190
+Multiplication done!
+Common running time is on the minimum side, as the average is close to minimum.
