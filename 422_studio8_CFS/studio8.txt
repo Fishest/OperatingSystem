@@ -1,0 +1,130 @@
+1. Name: Zimu Wang
+2. 
+root@raspberrypi:/home/pi# echo 0 > /proc/sys/kernel/sched_autogroup_enabled
+root@raspberrypi:/home/pi# cat /proc/sys/kernel/sched_autogroup_enabled
+0
+
+
+3.
+In top:
+1140 root      20   0    1812    324    268 R  99.8  0.0   0:29.18 aff
+
+in kernelshark, using kernelshark trace.bat, CPU 3 is occupied as expected.	
+
+4.
+When the background tasks are running, other operations became less smooth. I sometimes notice
+significant changes in reaction time when you are trying to run another program. When browsing the internet,
+the webpage pops up smoother.
+
+5.
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.163s
+user	0m2.160s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.105s
+user	0m2.090s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m4.238s
+user	0m2.090s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m4.247s
+user	0m2.060s
+sys	0m0.000s
+
+6.
+The real time will increase because multiple process are sharing the computational resources. The user time will remain the same
+
+7.
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m6.415s
+user	0m2.090s
+sys	0m0.010s
+
+As expected, the real time increased while user time remain almost the same.
+
+8.
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n -20 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.407s
+user	0m2.090s
+sys	0m0.010s
+
+It's almost identical
+
+9.
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n -20 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.407s
+user	0m2.090s
+sys	0m0.010s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n -10 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.633s
+user	0m2.090s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n -15 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m2.526s
+user	0m2.110s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n -5 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m3.111s
+user	0m2.090s
+sys	0m0.000s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n 0 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m4.444s
+user	0m2.090s
+sys	0m0.020s
+pi@raspberrypi:~/Desktop/Operating System/422_studio5_zimuwang $ time sudo nice -n 5 ./dense_mm 300
+Generating matrices...
+Multiplying matrices...
+Multiplication done!
+
+real	0m9.365s
+user	0m2.220s
+sys	0m0.010s
+
+The number is priority with smaller number being higher priority.
