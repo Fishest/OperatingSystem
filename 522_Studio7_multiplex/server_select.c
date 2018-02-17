@@ -51,8 +51,11 @@ int main (void) {
 	printf("STDIN_FILENO: %d", STDIN_FILENO);
 	printf("SOCKET: %d", sfd);
 	FD_SET(sfd, &readfds);
+
 	while (1) {
-		ret = select(sfd + 1, &readfds, NULL, NULL, NULL);
+		tv.tv_sec = TIMEOUT;
+		tv.tv_usec = 0;
+		ret = select(sfd + 1, &readfds, NULL, NULL, &tv);
 
 		if (ret == -1) {
 			perror("select");
