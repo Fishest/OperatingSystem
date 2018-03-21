@@ -1,0 +1,28 @@
+1. Name: Zimu Wang
+2. 
+real	0m4.248s
+user	0m4.250s
+sys	0m0.000s
+
+3.
+Browserblocking and thd-461 briefly interrupted the CPU because they occupied the CPU for
+a relatively short amount of time.
+
+4.
+Both are working at priority of 99.
+
+5.
+There are much less interrupts when running with priority 1
+
+6.
+Only 5 sched_switch on CPU core 3 that I used. Other cores have significantly more such interrupts.
+Especially CPU 0 and 2. CPU 1 had less niterrupts.
+
+7.
+migration0 to migration3, and [irq/92-mmc1]. The migration processes have to adjust in real time how much work they should do
+
+8. 
+sched_switch happened 6 times, and they mostly occurred at the beginning or end of the program.
+
+9.
+Based on the marker, it takes roughly 0.001 seconds to switch between multiple processes.
