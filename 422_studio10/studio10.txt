@@ -1,0 +1,101 @@
+Name: Zimu Wang
+3:
+Code:
+module_exit(spawn_exit);
+^
+
+▽
+#include <linux/init.h>
+#include <linux/kthread.h>
+#include <linux/module.h>
+#include <linux/string.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+
+static struct task_struct* threads[4];
+
+static int thread_work(void * data) {
+       return 0;
+}
+
+static int spawn_init(void) {
+       int index;
+       for (index = 0; index < 4; index ++) {
+               threads[index] = kthread_create(&thread_work, NULL, "thread");
+               kthread_bind(threads[index], index);
+               wake_up_process(threads[index]);
+       }
+       return 0;
+}
+
+static int spawn_exit(void) {
+       int index;
+       int ret;
+       for (index = 0; index < 4; index ++) {
+               if (threads[index] != NULL) {
+                       ret = kthread_stop(threads[index]);
+                       if (ret != 0) {
+                               printk(KERN_DEBUG "Thread stopping failed");
+                       }
+               }
+       }
+}
+
+
+
+module_init(spawn_init);
+module_exit(spawn_exit);
+
+4:
+shared_data is not always 4000000
+It should be 4000000 without data race because four threads increment the counter 100000 times each
+Two threads can obtain the variable with the same value, increment their copies respectively, and tried to write back.
+In this case, e.g. both threads received shared_data=10, and tried to write back 11. Shared_data is now 11 instead of 12.
+
+5:
+shared_data: 220679
+shared_data: 210897
+shared_data: 290132
+
+6:
+atomic_t shared_data;
+
+#define iter 1000000
+
+static struct task_struct* threads[4];
+
+static int thread_work(void * data) {
+        int i;
+        for (i = 0; i < iter; i++) {
+                atomic_add(1, &shared_data);
+        }
+        while (!kthread_should_stop()) {
+                schedule();
+        }
+        //printk(KERN_DEBUG "THread finished");
+}
+
+static int spawn_init(void) {
+        int index;
+        atomic_set(&shared_data, 0);
+        for (index = 0; index < 4; index ++) {
+                printk(KERN_DEBUG "Creating thread # %d", index);
+                threads[index] = kthread_create(&thread_work, NULL, "thread");
+                if (threads[index] == NULL) {
+                        printk(KERN_DEBUG "Thread creation failed in # %d", index);
+                }
+                kthread_bind(threads[index], index);
+                wake_up_process(threads[index]);
+        }
+        return 0;
+}
+
+7.
+Shared_data 40000000
+Shared_data 40000000
+Shared_data 40000000
+
+consistently giving out 40000000
+
+8.
+They took about 0.14 seconds to execute

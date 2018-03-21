@@ -1,0 +1,52 @@
+=== Module Design ===
+The get_current_time function uses getnstimeofday function, and convert the timespec structure
+into an unsigned long long that is in nanosecond. 
+At monitor_sched_in, a new entry is created with start time being the current time. 
+When monitor_sched_out is called, the tracker gets the current entry, which is stored as a 
+member variable, and update its end_time. On piazza, the addition requirement that the first
+sched_out is ignored can be implemented with a flag in the tracker. It will correctly execute the 
+logic starting from the second monitor_sched_out. All other requirements, such as which core it is ran on, and which process preempted it, are 
+recorded in sched_in and sched_out, respectively.
+It turns out the in the default list implementation, the list_head is never iterated on in
+list_for_each_entry_safe or list_empty function. As a result, when the list is initialized in 
+monitor_open method, a dummy head is created. When we are removing items from monitor reads or 
+monitor flush, we can make sure that we will never deal with null pointers when removing the list items.
+All the lock objects are  members of the preemption_tracker object, meaning that each tracker will
+have its own lock and lock_macro that is passed into the spin_lock_irqsave and spin_unlock_irqrestore function.
+
+
+
+
+
+
+
+Mean Sched_in: 1388859353.111111, Mean sched_out: 28076.176471, # migrations: 17, # preemptions: 18
+Total sched_in : 24999468356.000000, total sched_out: 477295.000000.
+
+real	0m29.065s
+user	0m29.040s
+sys	0m0.030s
+
+
+3 Threads:
+Mean Sched_in: 40548874.371508, Mean sched_out: 12627274.037762, # migrations: 715, # preemptions: 716
+Total sched_in : 29032994050.000000, total sched_out: 9028500937.000000.
+
+real	0m29.389s
+user	0m29.130s
+sys	0m0.040s
+
+4 Threads:
+Mean Sched_in: 33392207.356243, Mean sched_out: 287822.144495, # migrations: 872, # preemptions: 873
+Total sched_in : 29151397022.000000, total sched_out: 250980910.000000.
+
+real	0m29.486s
+user	0m29.180s
+sys	0m0.060s
+
+Mean Sched_in: 21698121.225446, Mean sched_out: 513012.751303, # migrations: 1343, # preemptions: 1344
+Total sched_in : 29162274927.000000, total sched_out: 688976125.000000.
+
+Count rcu: 21
+#preemption 739
+
