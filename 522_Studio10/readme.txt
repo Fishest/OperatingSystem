@@ -39,4 +39,24 @@ Write beyond limit and not freeing:
 This is fine as well.
 
 4.
+Monitoring:
+root@raspberrypi:/home/pi/Desktop/Operating System/522_Studio10# ./monitoring /sys/fs/cgroup/memory/child1/cgroup.event_control /sys/fs/cgroup/memory/child1/memory.oom_control
+Opening /sys/fs/cgroup/memory/child1/cgroup.event_control
+first string 3 5
+Message received 67072
+
+Monitored doesn't have output, except showing killed when exceeding the memory limit
+
+5.
+Monitoring:
+root@raspberrypi:/home/pi/Desktop/Operating System/522_Studio10# ./monitoring /sys/fs/cgroup/memory/child1/cgroup.event_control /sys/fs/cgroup/memory/child1/memory.oom_control /sys/fs/cgroup/memory/child2/cgroup.event_control /sys/fs/cgroup/memory/child2/memory.oom_control
+Opening /sys/fs/cgroup/memory/child1/cgroup.event_control
+Opening /sys/fs/cgroup/memory/child2/cgroup.event_control
+first string 3 6
+first string 4 8
+10000 seconds elapsed. 
+Message received 1994394600
+
+Monitored both outputed killed when reaching memory limit
+
 

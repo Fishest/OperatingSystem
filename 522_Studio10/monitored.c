@@ -6,7 +6,13 @@
 int main() {
 	
 	void* data;
-	while (0) {
-		data = malloc(10);
+	while (1) {
+		data = malloc(1000);
+		if (data != NULL) {
+			//printf("going");
+		} else {
+			printf("abort");
+		}
 	}
+	return 0;
 }
