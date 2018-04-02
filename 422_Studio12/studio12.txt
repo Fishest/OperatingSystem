@@ -1,0 +1,108 @@
+1. Name: Zimu Wang
+2. 
+[ 1041.969516] Loaded kernel_memory module
+[ 1041.970945] Kernel page size 4096
+[ 1041.970974] size of datatype_t: 32
+[ 1041.970998] 128 can fit
+[ 1041.971720] Hello from thread k_memory. nr_structs=2000
+
+3.
+Message:
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=1000
+root@raspberrypi:/home/pi# dmesg
+[ 1826.267185] Loaded kernel_memory module
+[ 1826.269131] Kernel page size 4096
+[ 1826.269148] size of datatype_t: 32
+[ 1826.269158] 128 can fit
+[ 1826.269170] nr_structs_per_page: 128, nr_pages: 8, order: 3
+[ 1826.269204] Hello from thread k_memory. nr_structs=1000
+root@raspberrypi:/home/pi# rmmod kernel_memory.ko 
+root@raspberrypi:/home/pi# dmesg --clear
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=2000
+root@raspberrypi:/home/pi# dmesg
+[ 1836.700294] Loaded kernel_memory module
+[ 1836.700497] Kernel page size 4096
+[ 1836.700513] size of datatype_t: 32
+[ 1836.700523] 128 can fit
+[ 1836.700539] nr_structs_per_page: 128, nr_pages: 16, order: 4
+[ 1836.702311] Hello from thread k_memory. nr_structs=2000
+root@raspberrypi:/home/pi# rmmod kernel_memory.ko 
+root@raspberrypi:/home/pi# dmesg --clear
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=4000
+root@raspberrypi:/home/pi# dmesg
+[ 1848.381372] Loaded kernel_memory module
+[ 1848.381576] Kernel page size 4096
+[ 1848.381590] size of datatype_t: 32
+[ 1848.381601] 128 can fit
+[ 1848.381613] nr_structs_per_page: 128, nr_pages: 32, order: 5
+[ 1848.381651] Hello from thread k_memory. nr_structs=4000
+
+my_get_order first checks if the given number is one of the 2 exponentials. Whether it is 
+of the form 2^(some number). It does so by bit-and operation on x and x-1. if x is of the form
+2^(some number), then its binary representation is of the form 100...000. and x-1 is 11.1111.
+With x&(x-1) = 0. In all other cases, x&(x-1) is non-zero. The while loop is simply dividing the 
+number by 2 each time to count how many digits it has in binary form, which in turn gives the
+order of the page
+
+4.
+[ 4133.024446] Loaded kernel_memory module
+[ 4133.028047] Kernel page size 4096
+[ 4133.028065] size of datatype_t: 32
+[ 4133.028074] 128 can fit
+[ 4133.028087] nr_structs_per_page: 128, nr_pages: 2, order: 1
+[ 4133.028103] num:0, i:0, j:0, k:0
+[ 4133.028127] num:1024, i:1, j:0, k:0
+
+
+5.
+nr_structs=1000
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=1000
+root@raspberrypi:/home/pi# dmesg
+[ 4735.408790] Loaded kernel_memory module
+[ 4735.412133] Kernel page size 4096
+[ 4735.412152] size of datatype_t: 32
+[ 4735.412161] 128 can fit
+[ 4735.412174] nr_structs_per_page: 128, nr_pages: 8, order: 3
+root@raspberrypi:/home/pi# rmmod kernel_memory.ko 
+root@raspberrypi:/home/pi# dmesg
+[ 4735.408790] Loaded kernel_memory module
+[ 4735.412133] Kernel page size 4096
+[ 4735.412152] size of datatype_t: 32
+[ 4735.412161] 128 can fit
+[ 4735.412174] nr_structs_per_page: 128, nr_pages: 8, order: 3
+[ 4740.925615] Exit successful
+[ 4740.925627] Unloaded kernel_memory module
+
+nr_structs=10000
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=10000
+root@raspberrypi:/home/pi# dmesg
+[ 4782.750699] Loaded kernel_memory module
+[ 4782.754104] Kernel page size 4096
+[ 4782.754125] size of datatype_t: 32
+[ 4782.754144] 128 can fit
+[ 4782.754157] nr_structs_per_page: 128, nr_pages: 79, order: 7
+root@raspberrypi:/home/pi# rmmod kernel_memory.ko 
+root@raspberrypi:/home/pi# dmesg
+[ 4782.750699] Loaded kernel_memory module
+[ 4782.754104] Kernel page size 4096
+[ 4782.754125] size of datatype_t: 32
+[ 4782.754144] 128 can fit
+[ 4782.754157] nr_structs_per_page: 128, nr_pages: 79, order: 7
+[ 4789.684482] Exit successful
+[ 4789.684495] Unloaded kernel_memory module
+
+nr_structs=50000
+root@raspberrypi:/home/pi# dmesg --clear
+root@raspberrypi:/home/pi# insmod kernel_memory.ko nr_structs=50000
+root@raspberrypi:/home/pi# rmmod kernel_memory.ko 
+root@raspberrypi:/home/pi# dmesg
+[ 4816.699694] Loaded kernel_memory module
+[ 4816.703718] Kernel page size 4096
+[ 4816.703737] size of datatype_t: 32
+[ 4816.703747] 128 can fit
+[ 4816.703759] nr_structs_per_page: 128, nr_pages: 391, order: 9
+[ 4820.170517] Exit successful
+[ 4820.170534] Unloaded kernel_memory module
+
+Everything looks fine
+

@@ -1,0 +1,34 @@
+Name: Zimu Wang, Wei Weng, Diqiu Zhou
+2. 3. 4.
+The previous results weren't able to store due to kernel panic, but this output answers the
+previous questions as well.
+root@raspberrypi:/home/pi# dmesg
+[  113.215068] Module loaded
+[  114.215341] Timer function
+[  114.215414] Doing thread function
+[  121.703373] 0-th timestamp, tv64: 113192610038
+[  121.703413] 1-th timestamp, tv64: 113192848787
+[  121.703425] DIFF: 1-th: tv64: 238749
+[  121.703435] 2-th timestamp, tv64: 113192858109
+[  121.703446] DIFF: 2-th: tv64: 9322
+[  121.703456] 3-th timestamp, tv64: 114192881020
+[  121.703467] DIFF: 3-th: tv64: 1000022911
+[  121.703477] 4-th timestamp, tv64: 114192928363
+[  121.703487] DIFF: 4-th: tv64: 47343
+[  121.703498] 5-th timestamp, tv64: 114192943155
+[  121.703508] DIFF: 5-th: tv64: 14792
+[  121.703518] 6-th timestamp, tv64: 0
+[  121.703529] DIFF: 6-th: tv64: -114192943155
+[  121.703539] 7-th timestamp, tv64: 0
+[  121.703549] DIFF: 7-th: tv64: 0
+[  121.703559] 8-th timestamp, tv64: 0
+[  121.703568] DIFF: 8-th: tv64: 0
+[  121.703578] 9-th timestamp, tv64: 0
+[  121.703588] DIFF: 9-th: tv64: 0
+[  121.703598] Between 4 and 0 1000318325
+[  121.703608] Between 5 and 3 62135
+[  121.703616] Module unloaded
+
+Time between 4 and 0 is indeed around 1 second, and time between 5 and 3 is relatively small.
+
+5.

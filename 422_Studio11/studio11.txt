@@ -1,0 +1,101 @@
+Name: Zimu Wang
+2.
+Command: gcc -fopenmp workload.c -o workload
+It occupied four cores because the CPU consumption is nearly 400%.
+
+3.
+#define UNLOCKED 0
+#define LOCKED 1
+
+volatile int lock = 0;
+
+void lock(volatile int * input) {
+	
+}
+
+void unlock(volatile int* input) {
+}
+
+4.
+void lock(volatile int * input) {
+	int ret;
+	int expected;
+	int desired;
+	while (1) {
+		expected = UNLOCKED;
+		desired = LOCKED;
+		ret = __atomic_compare_exchange(input, &expected, &desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+		if (ret) {
+			break;
+		}
+		else {
+			//printf("Contending\n");
+		}
+	}
+}
+
+void unlock(volatile int* input) {
+	int expected = LOCKED;
+	int desired = UNLOCKED;
+	int ret = __atomic_compare_exchange(input, &expected, &desired, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+	if (!ret) {
+		printf("This should never happen\n");
+	}
+}
+
+5.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio11 $ ./workload
+FInished.
+CPU 3 finished!
+FInished.
+CPU 1 finished!
+FInished.
+CPU 1 finished!
+FInished.
+CPU 2 finished!
+
+
+Some are ran on the same CPU, which means that the work is not done concurrently.
+
+6.
+No, I don't need to changed the UNLOCKED and LOCKED macro. Because I set UNLOCKED at 1, means someone
+who wants to claim the lock and come and decrement it.
+
+7, 8.
+void lock(volatile int * input) {
+	int ret;
+	while (1) {
+		ret = __atomic_sub_fetch(input, 1, __ATOMIC_ACQ_REL);
+		if (ret < 0) {
+			__atomic_store_n(input, -1, __ATOMIC_RELEASE);
+			syscall(SYS_futex, input, FUTEX_WAIT, -1, NULL);
+		} 
+		else {
+			break;
+		}
+	}
+}
+
+void unlock(volatile int* input) {
+	int ret;
+		ret = __atomic_add_fetch(input, 1, __ATOMIC_ACQ_REL);
+		if (ret != 1) {
+			__atomic_store_n(input, 1, __ATOMIC_RELEASE);
+			syscall(SYS_futex, input, FUTEX_WAKE, INT_MAX);
+		} 
+		
+	
+}
+
+9.
+For a thread to access the critical region, it must claim the lock and put other contenders to sleep.
+As the other contenders are only woken up by the signal that the lock is released, it ensures that only 
+one thread can work on the critical area.
+
+10.
+Putting a thread to sleep means moving it out of the cpu core. As operations on the CPU level
+is done by the kernel, it won't be possible to achieve sleep lock without a syscall.
+Otherwise the thread can at most do nothing, which still takes CPU time.
+
+
+
