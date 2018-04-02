@@ -10,7 +10,7 @@
 #include <linux/time.h>
 #include <linux/timekeeping.h>
 #include <asm/uaccess.h>
-
+#include <linux/spinlock.h>
 
 /* DO NOT MODIFY THIS CHECK. If you see the message in the error line below
  * when compliling your module, that means your kernel has not been configured
@@ -31,7 +31,7 @@ struct preemption_entry
 {
     /* TODO: populate this */
     //struct preemption_tracker tracker;
-    struct preemption_info_t * pit;
+    struct preemption_info * pit;
     struct list_head list_node;
 };
 
@@ -44,7 +44,8 @@ struct preemption_tracker
     /* TODO: anything else you need */
     struct preemption_entry * head;
     struct preemption_entry * current_entry;
-    struct mutex list_lock;
+    struct spinlock list_lock;
+    unsigned long lock_macro;
 };
 /* Get the current time, in nanoseconds. Should be consistent across cores.
  * You are encouraged to look at the options in:
@@ -56,10 +57,10 @@ get_current_time(void)
     /* TODO: implement */
     struct timespec tc;
     getnstimeofday(&tc);
-    return (unsigned long long) tc.tv_nsec;
+    return ((unsigned long long)tc.tv_sec) * 1000000000 + (unsigned long long)tc.tv_nsec;
 }
 
-/*
+/* 
  * Utilities to save/retrieve a tracking structure for a process
  * based on the kernel's file pointer.
  *
@@ -79,7 +80,7 @@ retrieve_tracker_of_process(struct file * file)
 }
 
 /*
- * Utility to retrieve a tracking structure based on the
+ * Utility to retrieve a tracking structure based on the 
  * preemption_notifier structure.
  *
  * DO NOT MODIFY THIS FUNCTION
@@ -90,7 +91,7 @@ retrieve_tracker_of_notifier(struct preempt_notifier * notifier)
     return container_of(notifier, struct preemption_tracker, notifier);
 }
 
-/*
+/* 
  * Callbacks for preemption notifications.
  *
  * monitor_sched_in and monitor_sched_out are called when the process that
@@ -101,7 +102,7 @@ retrieve_tracker_of_notifier(struct preempt_notifier * notifier)
  * With this list, you must be able to represent information such as:
  *      (i)   the amount of time a process executed before being preempted
  *      (ii)  the amount of time a process was scheduled out before being
- *            scheduled back on
+ *            scheduled back on 
  *      (iii) the cpus the process executes on each time it is scheduled
  *      (iv)  the number of migrations experienced by the process
  *      (v)   the names of the processes that preempt this process
@@ -121,9 +122,9 @@ monitor_sched_in(struct preempt_notifier * pn,
     printk(KERN_INFO "sched_in for process %s\n", current->comm);
     /* TODO: record information as needed */
     struct preemption_entry * new_entry;
-    struct preemption_info_t * new_info;
+    struct preemption_info * new_info;
     new_entry = (struct preemption_entry *)kmalloc(sizeof(struct preemption_entry), GFP_KERNEL);
-    new_info = (struct preemption_info_t *)kmalloc(sizeof(struct preemption_info_t), GFP_KERNEL);
+    new_info = (struct preemption_info *)kmalloc(sizeof(struct preemption_info), GFP_KERNEL);
     new_info->start_time = get_current_time();
     new_info->end_time = 0;
     new_info->duration = 0;
@@ -141,7 +142,7 @@ monitor_sched_out(struct preempt_notifier * pn,
 
     printk(KERN_INFO "sched_out for process %s\n", current->comm);
     /* TODO: record information as needed */
-    struct preemption_info_t * info;
+    struct preemption_info * info;
     info = tracker->current_entry->pit;
     info->end_time = get_current_time();
     info->duration = info->end_time - info->start_time;
@@ -149,7 +150,7 @@ monitor_sched_out(struct preempt_notifier * pn,
 }
 
 static struct preempt_ops
-notifier_ops =
+notifier_ops = 
 {
     .sched_in  = monitor_sched_in,
     .sched_out = monitor_sched_out
@@ -159,11 +160,11 @@ notifier_ops =
 
 
 /*
- * Device I/O callbacks for user<->kernel communication
+ * Device I/O callbacks for user<->kernel communication 
  */
 /*
  * This function is invoked when a user opens the file /dev/sched_monitor.
- * You must update it to allocate the 'tracker' variable and initialize
+ * You must update it to allocate the 'tracker' variable and initialize 
  * any fields that you add to the struct
  */
 static int
@@ -184,28 +185,32 @@ sched_monitor_open(struct inode * inode,
      */
     struct preemption_entry * entry;
     entry = (struct preemption_entry *)kmalloc(sizeof(struct preemption_entry), GFP_KERNEL);
-    entry->start_time = get_current_time();;
-    entry->end_time = 0;
-    entry->duration = 0;
+    struct preemption_info * info;
+    info = (struct preemption_info *)kmalloc(sizeof(struct preemption_info), GFP_KERNEL);
+    spin_lock_init(&tracker->list_lock);
+    info->start_time = get_current_time();;
+    info->end_time = 0;
+    info->duration = 0;
+    entry->pit = info;
     INIT_LIST_HEAD(&entry->list_node);
     tracker->head = entry;
     tracker->current_entry = entry;
-    mutex_init(&tracker->list_lock);
+    //mutex_init(&tracker->list_lock);
 #if 1
     /* setup tracker */
     /* initialize preempt notifier object */
     preempt_notifier_init(&(tracker->notifier), &notifier_ops);
     /* Save tracker so that we can access it on other file operations from this process */
     save_tracker_of_process(file, tracker);
-    printk(KERN_DEBUG "Tracker saved");
-    printk(KERN_DEBUG "At time %llu", get_current_time());
+    printk(KERN_DEBUG "Tracker saved\n");
+    printk(KERN_DEBUG "At time %llu\n", get_current_time());
     return 0;
 #endif
 }
 
 /* This function is invoked when a user closes /dev/sched_monitor.
- * You must update is to free the 'tracker' variable allocated in the
- * sched_monitor_open callback, as well as free any other dynamically
+ * You must update is to free the 'tracker' variable allocated in the 
+ * sched_monitor_open callback, as well as free any other dynamically 
  * allocated data structures you may have allocated (such as linked lists)
  */
 static int
@@ -216,33 +221,33 @@ sched_monitor_flush(struct file * file,
 
     printk(KERN_DEBUG "Process %d (%s) closed " DEV_NAME "\n",
         current->pid, current->comm);
-    printk(KERN_DEBUG "At time %llu", get_current_time());
+    printk(KERN_DEBUG "At time %llu\n", get_current_time());
     /* Unregister notifier */
-    tracker->current_entry->end_time = get_current_time();
-    tracker->current_entry->duration = tracker->current_entry->end_time - tracker->current_entry->start_time;
+    tracker->current_entry->pit->end_time = get_current_time();
+    tracker->current_entry->pit->duration = tracker->current_entry->pit->end_time - tracker->current_entry->pit->start_time;
     char message[14] = "monitor_flush";
-    tracker->current_entry->preempt_process_name = message;
+    tracker->current_entry->pit->preempt_process_name = message;
     if (tracker->enabled) {
         /* TODO: unregister notifier */
         preempt_notifier_unregister(&(tracker->notifier));
 	tracker->enabled = false;
     }
-    mutex_lock(&tracker->list_lock);
+    spin_lock_irqsave(&tracker->list_lock, tracker->lock_macro);
     /* TODO: other teardown, freeing, etc. */
     struct preemption_entry * cur, *next;
-    printk(KERN_DEBUG "The head has %llu start time and %llu end time, and kicked by %s", tracker->head->pit->start_time, tracker->head->pit->end_time, tracker->head->pit->preempt_process_name);
+    printk(KERN_DEBUG "The head has %llu start time and %llu end time, and kicked by %s\n", tracker->head->pit->start_time, tracker->head->pit->end_time, tracker->head->pit->preempt_process_name);
     list_for_each_entry_safe(cur, next, &tracker->head->list_node, list_node) {
-    	printk(KERN_DEBUG "Freeing preemption entry with %llu start time, %llu end time, kicked by %s", cur->pit->start_time, cur->pit->end_time, cur->pit->preempt_process_name);
+    	printk(KERN_DEBUG "Freeing preemption entry with %llu start time, %llu end time, kicked by %s\n", cur->pit->start_time, cur->pit->end_time, cur->pit->preempt_process_name);
 	list_del(&cur->list_node);
         kfree(cur->pit);
 	kfree(cur);
     }
     kfree(tracker->head);
-    mutex_unlock(&tracker->list_lock);
+    spin_unlock_irqrestore(&tracker->list_lock, tracker->lock_macro);
     return 0;
 }
 
-/*
+/* 
  * Enable/disable preemption tracking for the process that opened this file.
  * Do so by registering/unregistering preemption notifiers.
  */
@@ -311,7 +316,7 @@ sched_monitor_read(struct file * file,
     struct preemption_tracker * tracker = retrieve_tracker_of_process(file);
     unsigned long flags;
 
-    /* TODO:
+    /* TODO: 
      * (1) make sure length is valid. It must be an even multiuple of the size of preemption_info_t.
      *     i.e., if the value is the size of the structure times 2, the user is requesting the first
      *     2 entries in the list
@@ -323,10 +328,45 @@ sched_monitor_read(struct file * file,
      * (6) repeat for each entry
      * (7) unlock the list
      */
-
+    if (length % sizeof(struct preemption_info) != 0) {
+	printk(KERN_ERR "Length not multiple of info size");
+    }
+    int multiple;
+    multiple = length / sizeof(struct preemption_info);
+    
+     
     printk(KERN_DEBUG "Process %d (%s) read " DEV_NAME "\n",
         current->pid, current->comm);
+    spin_lock_irqsave(&tracker->list_lock, tracker->lock_macro);
+    struct list_head pos = tracker->head->list_node;
+    if (list_empty(&pos) == 1) {
+           printk(KERN_DEBUG "List already empty");
+           return 0;
+        }
+    struct preemption_entry *cur = container_of(&pos, struct preemption_entry, list_node);
+    struct preemption_info *pit;
+    int count;
+    unsigned long ret;
+    for (count = 0; count < multiple; count++) {
+        if (list_empty(&pos) == 1) {
+           printk(KERN_DEBUG "List empty after %d removal", count);
+           break;
+        }
 
+        cur = container_of(&pos, struct preemption_entry, list_node);
+        pit = cur->pit;
+        printk(KERN_DEBUG "Trying to copy over %u bytes\n", sizeof(struct preemption_info));
+        ret = copy_to_user(buffer, pit, sizeof(struct preemption_info));
+        if (ret != 0) {
+           printk(KERN_DEBUG "Failed to copy to user buffer %lu bytes\n", ret);
+           break;
+        }
+        buffer += sizeof(struct preemption_info);
+        list_del(&pos);
+        kfree(cur->pit);
+        kfree(cur);
+     }
+     tracker->head = container_of(&pos, struct preemption_entry, list_node);;
     /* Use these functions to lock/unlock our list to prevent concurrent writes
      * by the preempt notifier callouts
      *
@@ -336,12 +376,14 @@ sched_monitor_read(struct file * file,
      *  Before the spinlock can be used, it will have to be initialized via:
      *  spin_lock_init(<pointer to spinlock_t variable>);
      */
-
-    return 0;
+    spin_unlock_irqrestore(&tracker->list_lock, tracker->lock_macro); 
+    ssize_t ret_size = sizeof(struct preemption_info) * count - ret;
+    printk(KERN_DEBUG "copied over %u bytes in total with ret %d and %d entries\n", sizeof(struct preemption_info), ret, count);
+    return ret_size;
 }
 
 static struct file_operations
-dev_ops =
+dev_ops = 
 {
     .owner = THIS_MODULE,
     .open = sched_monitor_open,
@@ -352,7 +394,7 @@ dev_ops =
 };
 
 static struct miscdevice
-dev_handle =
+dev_handle = 
 {
     .minor = MISC_DYNAMIC_MINOR,
     .name = SCHED_MONITOR_MODULE_NAME,
@@ -383,7 +425,7 @@ sched_monitor_init(void)
     return 0;
 }
 
-static void
+static void 
 sched_monitor_exit(void)
 {
     /* Disable preempt notifier globally */
