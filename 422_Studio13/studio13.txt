@@ -1,0 +1,12 @@
+Name: Zimu Wang
+2.
+For processes that share the same memory region, they need a consensus on what is in the memory and how it looks like. Otherwise,
+if the layout of the memory is not agreed on, then one process could corrupt the shared memory and break other processes.
+
+3.
+I expect memcpy to be more efficient as it directly copy a chunk of memory from
+source to destination without considering the type of data being copied.
+Iterating through the array and copy each item incurs overhead and might involve
+data copying and type conversion that are time consuming.
+
+4.

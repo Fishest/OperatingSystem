@@ -9,37 +9,92 @@
 #include <linux/list.h>
 #include <linux/time.h>
 #include <linux/kthread.h>
+#include <linux/ktime.h>
+#include <linux/hrtimer.h>
 #include <linux/mm.h>
+#include <linux/spinlock.h>
+
+#define TIMER_COUNT 3
 
 static unsigned long num_threads = 1;
 static unsigned long upper_bound = 10;
-module_param(num_threads, ulong, 0);
-module_param(upper_bound, ulong, 0);
+module_param(num_threads, ulong, 0644);
+module_param(upper_bound, ulong, 0644);
 
-static unsigned int * counter;
+static unsigned long * counter;
 static volatile int * arr;
-static volatile int curr;
-static atomic_t num_threads_finished = ATOMIC_INIT(0);
+static volatile unsigned long curr;
 
-struct timespec tp1 = {0};
-struct timespec tp2 = {0};
-struct timespec tp3 = {0};
+struct spinlock cur_lock, array_lock;
+unsigned long cur_lock_macro, array_lock_macro;
 
-void lock( volatile int * ptr ){
-        int ret_val = 0;
-        while (1) {
-                ret_val = __atomic_sub_fetch( ptr, 1, __ATOMIC_ACQ_REL );
-                if (ret_val >= 0) { break; }
-                __atomic_store_n( ptr, -1, __ATOMIC_RELEASE );
-                syscall( SYS_futex, ptr, FUTEX_WAIT, -1, NULL );
+static atomic_t num_threads_count = ATOMIC_INIT(0);
+static atomic_t num_threads_count1 = ATOMIC_INIT(0);
+
+static ktime_t times[TIMER_COUNT];
+
+static void
+synchronize_start_barrier(void)
+{
+	int is_last = 1;
+	if (atomic_read(&num_threads_count) == 1) {
+		is_last = 0;
+	}
+        atomic_sub(1, &num_threads_count);
+
+        while (atomic_read(&num_threads_count) > 0) {
+
+        }
+	if (is_last == 0) {
+		times[1] = ktime_get();
+	}
+}
+
+static void
+synchronize_end_barrier(void)
+{
+        int is_last = 1;
+        if (atomic_read(&num_threads_count1) == 1) {
+                is_last = 0;
+        }
+        atomic_sub(1, &num_threads_count1);
+
+        while (atomic_read(&num_threads_count1) > 0) {
+
+        }
+        if (is_last == 0) {
+                times[2] = ktime_get();
         }
 }
 
-void unlock ( volatile int * ptr ){
-        int ret_val = __atomic_add_fetch( ptr, 1, __ATOMIC_ACQ_REL );
-        if (ret_val != 1) {
-                __atomic_store_n( ptr, 1, __ATOMIC_RELEASE );
-                syscall( SYS_futex, ptr, FUTEX_WAKE, INT_MAX );
+static void
+mark_nonprimes(int *ptr)
+{
+        while (1) {
+                spin_lock_irqsave(&cur_lock, cur_lock_macro);
+                while (curr <= upper_bound && arr[curr] == 0) {
+                        curr++;
+                }
+		printk(KERN_INFO "Working on %lu\n", curr);
+                spin_unlock_irqrestore(&cur_lock, cur_lock_macro);
+                if (curr > upper_bound) return;
+		unsigned long prime = curr;
+                unsigned long set_zero = prime;
+                //spin_lock_irqsave(&array_lock, array_lock_macro);
+                while (set_zero + prime <= upper_bound) {
+                        set_zero += prime;
+                        spin_lock_irqsave(&array_lock, array_lock_macro);
+			if (arr[set_zero] != 0) {
+				arr[set_zero] = 0;
+                        	(*ptr)++;
+			}
+			spin_unlock_irqrestore(&array_lock, array_lock_macro);
+                }
+                //spin_unlock_irqrestore(&array_lock, array_lock_macro);
+
+		spin_lock_irqsave(&cur_lock, cur_lock_macro);
+		curr++;
+		spin_unlock_irqrestore(&cur_lock, cur_lock_macro);
         }
 }
 
@@ -48,51 +103,12 @@ thread_fn(void *void_ptr)
 {
         int *counter_ptr = (int *)void_ptr;
 
-        synchronize_barrier();
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &tp2);
+        synchronize_start_barrier();
+        printk(KERN_INFO "Doing work\n");
         mark_nonprimes(counter_ptr);
-        synchronize_barrier();
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &tp3);
-        // TODO: RACE!!!!!!!
+        printk(KERN_INFO "Work finished\n");
+        synchronize_end_barrier();
 }
-
-static void
-synchronize_barrier()
-{
-        atomic_add(1, &num_threads_finished);
-
-        while (atomic_read(&num_threads_finished) > 0) {
-                ;
-        }
-
-}
-
-static void
-mark_nonprimes(int *ptr)
-{
-        while (1) {
-                lock(&curr);
-                int prime = curr;
-                // increment curr
-                while (curr <= upper_bound && arr[curr] == 0) {
-                        curr++;
-                }
-                unlock(&curr);
-                if (prime > upper_bound) return;
-
-                int set_zero = prime;
-                while (set_zero + prime <= upper_bound) {
-                        set_zero += prime;
-                        lock(&(arr[set_zero]));
-                        arr[set_zero] = 0;
-                        unlock(&(unlock arr[set_zero]));
-                        // TODO: increment counter
-                        (*ptr)++;
-                }
-
-        }
-}
-
 
 /* init function - logs that initialization happened, returns success */
 static int
@@ -100,7 +116,7 @@ simple_init(void)
 {
         printk(KERN_ALERT "simple module initialized\n");
 
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &tp1);
+        times[0] = ktime_get();
 
         if (num_threads < 1) {
                 printk(KERN_ERR "Invalid parameter value: num_threads < 1\n");
@@ -115,32 +131,36 @@ simple_init(void)
                 return(-1);
         }
         counter = kmalloc(num_threads*sizeof(int), GFP_KERNEL);
-        if (!counter) {
+        if (counter == NULL) {
                 printk(KERN_ERR "kmalloc failure!\n");
-                counter = 0;
-                arr = 0;
+                counter = NULL;
+                arr = NULL;
                 return(-1);
         }
         arr = kmalloc((upper_bound+1)*sizeof(int), GFP_KERNEL);
-        if (!arr) {
+        if (arr == NULL) {
                 printk(KERN_ERR "kmalloc failure!\n");
                 kfree(counter);
-                counter = 0;
-                arr = 0;
+                counter = NULL;
+                arr = NULL;
                 return(-1);
         }
         int i;
         for (i = 0; i < num_threads; i++) {counter[i] = 0; }
         for (i = 2; i <= upper_bound; i++) {arr[i] = i; }
-        atomic_set(&curr, 2);
 
-        atomic_set(&num_threads_finished, num_threads);
+        spin_lock_init(&cur_lock);
+        spin_lock_init(&array_lock);
 
+        curr = 2;
+
+        atomic_set(&num_threads_count, num_threads);
+	atomic_set(&num_threads_count1, num_threads);
         struct task_struct *tasks[num_threads];
 
         int j=0;
         for (; j<num_threads; j++) {
-                tasks[j] = kthread_create(thread_fn, (void *)(&(counter[j]), "0"));
+                tasks[j] = kthread_create(thread_fn, (void *)(counter + j), "0");
                 wake_up_process(tasks[j]);
 
         }
@@ -154,41 +174,40 @@ simple_exit(void)
 {
         printk(KERN_ALERT "simple module is being unloaded\n");
 
-        if (num_threads_finished > 0) {
+        if (atomic_read(&num_threads_count) > 0) {
                 printk(KERN_ERR "Processing not complete\n");
-                return(-1);
         }
-        if (counter == 0 && arr == 0) {
-                return(-1);
+        else if (counter == NULL && arr == NULL) {
+                printk(KERN_INFO "Initialization failed\n");
         }
+        else {
 
+                unsigned long i = 2;
+                unsigned long prime_count = 0;
 
-        int i = 0;
-        int prime_count = 0;
+                for (; i<=upper_bound; i++) {
 
-        for (; i<=upper_bound; i++) {
-
-                if (arr[i] != 0) {
-                        prime_count++;
-                        printk("%d", arr[i]);
-                        if (prime_count %8 == 0) {
-                                printk("\n");
+                        if (arr[i] != 0) {
+                                prime_count++;
+                                //printk(KERN_INFO "%d", arr[i]);
+                                if (prime_count %8 == 0) {
+                                        printk(KERN_INFO "\n");
+                                }
                         }
+
                 }
-
+                printk(KERN_INFO "\n");
+                unsigned long count_sum = 0;
+                for (i = 0; i < num_threads; i++) {
+			                count_sum += counter[i];
+			                printk(KERN_INFO "Thread %d: count:%lu\n", i, counter[i]);
+		            }
+                printk(KERN_INFO "prime_count=%lu, num_nonprime=%lu, unnecessary_cross_count=%lu\n", prime_count,upper_bound-prime_count-1,count_sum-upper_bound+prime_count+1);
+                printk(KERN_INFO "upper_bound=%lu, num_threads=%lu\n",upper_bound,num_threads);
+                printk(KERN_INFO "Time spent setting up the module: %llu, time spent processing primes:%llu\n",times[1].tv64 - times[0].tv64,times[2].tv64 - times[1].tv64);
+                kfree((const void *)arr);
+                kfree((const void *)counter);
         }
-        int count_sum = 0;
-        for (i = 0; i < num_threads; i++) count_sum += counter[i];
-        printk("\nprime_count=%i, num_nonprime=%i, unnecessary_cross_count=%i\n", pr
-               ime_count, (upper_bound-prime_count), (count_sum-upper_bound+prime_count));
-        printk("upper_bound=%i, num_threads=%i\n", upper_bound, num_threads);
-        double d1, d2;
-        d1 = tp2.tv_sec - tp1.tv_sec + 0.000000001*(tp2.tv_nsec - tp1.tv_nsec);
-        d2 = tp3.tv_sec - tp2.tv_sec + 0.000000001*(tp3.tv_nsec - tp2.tv_nsec);
-        printk("Time spent setting up the module: %f, time spent processing primes:%f\n", d1, d2);
-
-        kfree(arr);
-        kfree(counter);
 
 }
 
