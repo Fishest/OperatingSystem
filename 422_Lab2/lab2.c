@@ -75,10 +75,13 @@ mark_nonprimes(int *ptr)
                 while (curr <= upper_bound && arr[curr] == 0) {
                         curr++;
                 }
-		printk(KERN_INFO "Working on %lu\n", curr);
+		if (curr > upper_bound) {
+			spin_unlock_irqrestore(&cur_lock, cur_lock_macro);
+			return;
+		}
+                unsigned long prime = curr;
                 spin_unlock_irqrestore(&cur_lock, cur_lock_macro);
-                if (curr > upper_bound) return;
-		unsigned long prime = curr;
+                printk(KERN_INFO "Working on %lu\n", curr);
                 unsigned long set_zero = prime;
                 //spin_lock_irqsave(&array_lock, array_lock_macro);
                 while (set_zero + prime <= upper_bound) {
@@ -160,7 +163,7 @@ simple_init(void)
 
         int j=0;
         for (; j<num_threads; j++) {
-                tasks[j] = kthread_create(thread_fn, (void *)(counter + j), "0");
+                tasks[j] = kthread_create(thread_fn, (void *)(counter + j), "thread #%d", j);
                 wake_up_process(tasks[j]);
 
         }
@@ -174,34 +177,35 @@ simple_exit(void)
 {
         printk(KERN_ALERT "simple module is being unloaded\n");
 
-        if (atomic_read(&num_threads_count) > 0) {
+        while (atomic_read(&num_threads_count) > 0) {
                 printk(KERN_ERR "Processing not complete\n");
         }
-        else if (counter == NULL && arr == NULL) {
+        if (counter == NULL && arr == NULL) {
                 printk(KERN_INFO "Initialization failed\n");
         }
         else {
 
                 unsigned long i = 2;
                 unsigned long prime_count = 0;
-
+                printk(KERN_INFO "Printing out the primes\n");
                 for (; i<=upper_bound; i++) {
 
                         if (arr[i] != 0) {
                                 prime_count++;
-                                //printk(KERN_INFO "%d", arr[i]);
+                                printk(KERN_CONT "%d ", arr[i]);
                                 if (prime_count %8 == 0) {
-                                        printk(KERN_INFO "\n");
+                                        printk(KERN_CONT "\n");
                                 }
                         }
 
                 }
+
                 printk(KERN_INFO "\n");
                 unsigned long count_sum = 0;
                 for (i = 0; i < num_threads; i++) {
-			                count_sum += counter[i];
-			                printk(KERN_INFO "Thread %d: count:%lu\n", i, counter[i]);
-		            }
+			count_sum += counter[i];
+			printk(KERN_INFO "Thread %d: count:%lu\n", i, counter[i]);
+		}
                 printk(KERN_INFO "prime_count=%lu, num_nonprime=%lu, unnecessary_cross_count=%lu\n", prime_count,upper_bound-prime_count-1,count_sum-upper_bound+prime_count+1);
                 printk(KERN_INFO "upper_bound=%lu, num_threads=%lu\n",upper_bound,num_threads);
                 printk(KERN_INFO "Time spent setting up the module: %llu, time spent processing primes:%llu\n",times[1].tv64 - times[0].tv64,times[2].tv64 - times[1].tv64);

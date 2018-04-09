@@ -1,0 +1,26 @@
+CSE422 Lab2
+1. Name: Angelica Tao Zhu, Zimu Wang, John Xiahou
+
+2. Email: angelica.tao@wustl.edu, zimu.wang@wustl.edu, z.xiahou@wustl.edu
+
+3. The lab is most developed with the help of the previous studios.
+
+4. Module Design and Implementation:
+As suggested by the professor in class, we want to make the lock as minimal as possible,
+in the sense that the operations while holding the lock should take less time. We used spinlock
+for all the locking mechanisms. Because we make the critical section as small as possible,
+the lock is going to be acquired and released very frequently so we can afford to make the
+other threads busy spinning.
+For the barrier function, we had to use two different barrier functions for beginning to
+mark the prime numbers and finishing marking them. For number of threads larger than 4, i.e. 8,
+the original implementation of barrier without schedule() call in the while-loop was
+able to proceed. My guess is that although there are only 4 cores available, some threads are
+preempted while spinning, and all threads eventually reached the barrier. However, it turns out
+that only a maximum of four threads will actually perform the work of crossing out non-primes.
+Another interesting part is to determine whether we should cross out a certain number. Using a
+spinlock to lock the array, we first check if the element is 0 or not, and if not we would
+cross it out. However, if we are using atomic operations and separate into atmoic_read() and
+atomic_set(), the operations combined is not atomic anymore. So we tried to use atomic_sub_return
+to make sure the entire checking-and-setting operation doesn't involve race.
+
+5.
