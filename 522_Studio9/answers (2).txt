@@ -1,0 +1,208 @@
+1.
+Diqiu Zhou, Zimu Wang, Wei Weng
+
+2.
+#include <sys/inotify.h>
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#define SUCCESS 0
+
+int main(int argc, char* args[]){
+  int fd;
+  fd = inotify_init1(0);
+  if (fd==-1){
+    perror("inotify_init1");
+    exit(EXIT_FAILURE);
+  }else{
+    printf("Successfully initialize inotify.\n");
+    printf("File descriptor number is %d.\n", fd);
+  }
+  return SUCCESS;
+}
+
+3.
+Valid Path:
+[wengwei@linuxlab008 linux_source]$ ./notify /tmp
+Successfully initialize inotify.
+File descriptor number is 3.
+Add watch successful.
+File descriptor number is 1.
+
+Invalid Path:
+[wengwei@linuxlab008 linux_source]$ ./notify /123
+Successfully initialize inotify.
+File descriptor number is 3.
+inotify_add_watch: No such file or directory
+
+4.
+monitoring /tmp/compile
+
+ls:
+wd=1 mask=1073741856 cookie=0 len=0 dir=yes
+wd=1 mask=1073741840 cookie=0 len=0 dir=yes
+
+Explanation:
+After converting the mask to binary, I find that IN_ISDIR is set so ls opens a 
+directory
+After converting the mask to binary, I find that IN_ISDIR is set so ls closes an 
+unwrittable directory
+
+
+touch newfile4:
+wd=1 mask=256 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=8 cookie=0 len=16 dir=no
+name=newfile4
+
+Explanation:
+mask=256 means that subfile was created
+mask=32 means that file was opened
+mask=4 means that metadata changed
+mask=8 means that writtalbe file was closed
+
+mv newfile4 ~/newfile4:
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=16 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=512 cookie=0 len=16 dir=no
+name=newfile4
+
+Explanation:
+File was opened
+mask=16 means that unwrittalbe file closed
+mask=512 means that subfile was deleted from the current path
+
+mv ~/newfile4 newfile4
+wd=1 mask=256 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=8 cookie=0 len=16 dir=no
+name=newfile4
+
+Explanation:
+Subfile created
+File was opened
+Metadata changed probably because last access time changed
+Metadata changed probably because path changed
+Writtable file was closed
+
+touch newfile4:
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile4
+wd=1 mask=8 cookie=0 len=16 dir=no
+name=newfile4
+
+Explanation:
+File was opened
+Metadata changed
+Writtable file was closed
+
+5.
+No output observed. It seems like the new watch overwrites the old watch because
+they have the same file descriptor number.
+
+6.
+Initialization:
+[wengwei@linuxlab008 linux_source]$ ./notify /tmp/compile/wengwei/
+Successfully initialize inotify.
+File descriptor number is 3.
+Add watch successful.
+File descriptor number is 1.
+
+touch newfile:
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile
+wd=1 mask=8 cookie=0 len=16 dir=no
+name=newfile
+
+mkdir newdir:
+wd=1 mask=1073742080 cookie=0 len=16 dir=yes
+name=newdir
+
+touch newdir/newfileinnewdir:
+wd=2 mask=256 cookie=0 len=16 dir=no
+name=newfileinnewdir
+wd=2 mask=32 cookie=0 len=16 dir=no
+name=newfileinnewdir
+wd=2 mask=4 cookie=0 len=16 dir=no
+name=newfileinnewdir
+wd=2 mask=8 cookie=0 len=16 dir=no
+name=newfileinnewdir
+wd=2 mask=512 cookie=0 len=16 dir=no
+name=newfileinnewdir
+
+Explanation: There is a wd number 2 added to newdir
+
+rm newdir/newfileinnewdir
+wd=2 mask=1024 cookie=0 len=0 dir=no
+wd=2 mask=32768 cookie=0 len=0 dir=no
+
+Explanation: 
+newfileinnewdir is removed
+
+rmdir newdir
+wd=1 mask=1073742336 cookie=0 len=16 dir=yes
+name=newdir
+
+Explanation: wd number 1 is still working
+
+ls
+wd=1 mask=1073741856 cookie=0 len=0 dir=yes
+wd=1 mask=1073741840 cookie=0 len=0 dir=yes
+
+rm newfile
+wd=1 mask=512 cookie=0 len=16 dir=no
+name=newfile
+
+touch newfile2
+wd=1 mask=256 cookie=0 len=16 dir=no
+name=newfile2
+wd=1 mask=32 cookie=0 len=16 dir=no
+name=newfile2
+wd=1 mask=4 cookie=0 len=16 dir=no
+name=newfile2
+wd=1 mask=8 cookie=0 len=16 dir=no
+name=newfile2
+
+mkdir newdir2
+wd=1 mask=1073742080 cookie=0 len=16 dir=yes
+name=newdir2
+
+mv newfile2 newdir2/newfile2
+wd=1 mask=64 cookie=678007 len=16 dir=no
+name=newfile2
+wd=4 mask=128 cookie=678007 len=16 dir=no
+name=newfile2
+
+Explanation: wd number 1's event shows that newfile2 is moved out
+wd number 4's event shows that newfile2 is moved into newdir2
+Both the original wd 1 and the new wd 4 are working
+
+rm newdir2/newfile2
+wd=3 mask=2048 cookie=0 len=0 dir=no
+wd=3 mask=4 cookie=0 len=0 dir=no
+wd=3 mask=1024 cookie=0 len=0 dir=no
+wd=3 mask=32768 cookie=0 len=0 dir=no
+wd=4 mask=512 cookie=0 len=16 dir=no
+name=newfile2
+
+ls
+wd=1 mask=1073741856 cookie=0 len=0 dir=yes
+wd=1 mask=1073741840 cookie=0 len=0 dir=yes

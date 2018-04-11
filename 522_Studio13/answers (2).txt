@@ -1,0 +1,15 @@
+1. Diqiu Zhou, Zimu Wang, Wei Weng
+
+2. 18177, 18185, 634
+
+3. See picture
+
+4. Inotify was not able to detect newly created processes.
+
+5. Inotify did not detect newly created processes, so we were not able to
+get ancestry information. 
+
+6. 
+If fork probability < terminate probability, will die out.
+If fork probability == terminate probability, will reach steady state.
+If fork probability > terminate probability, will expand indefinitely.
