@@ -10,3 +10,45 @@ Iterating through the array and copy each item incurs overhead and might involve
 data copying and type conversion that are time consuming.
 
 4.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ ./leader
+1804289383 846930886 1681692777 1714636915 1957747793 424238335 719885386 1649760492 596516649 1189641421 
+
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ ./follower 
+1804289383 846930886 1681692777 1714636915 1957747793 424238335 719885386 1649760492 596516649 1189641421 
+
+Because the follower program simply takes the already-allocated shared memory region.
+The leader also created everything for follower, so follower doesn't need O_CREAT flag and 
+ftruncate function.
+
+5.
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ ./leader
+Waiting for follower
+waiting for follower to finish reading
+
+
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ ./follower
+Waiting for leader
+1804289383 846930886 1681692777 1714636915 1957747793 424238335 719885386 1649760492 596516649 1189641421 
+
+I believe that besides the fact the memory might be corrupted (initialized with non-zero value),
+the code should work correctly based on the instruction. Each data modification is essentially
+protected by a volatile integer acting as a lock.
+
+6.
+1 million:
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ time ./follower 
+Waiting for leader
+
+real	0m0.028s
+user	0m0.020s
+sys	0m0.000s
+
+10 million :
+pi@raspberrypi:~/Desktop/Operating System/422_Studio13 $ time ./follower 
+Waiting for leader
+
+real	0m0.232s
+user	0m0.130s
+sys	0m0.100s
+
+100 million:

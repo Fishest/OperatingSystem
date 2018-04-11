@@ -9,18 +9,20 @@
 #include <sys/time.h>
 
 #define PRIORITY 10
-#define WORKLOAD 100000
+
 
 
 void timer_handler(int signum)
 {
    (void) signum;       /*  Avoids warning for unused argument  */
+   printf("Signal catched\n");
 }
 
-void work() {
+void work(int workload) {
+  printf("Start working\n");
   int i = 0;
   int temp = 1;
-  for (i; i < WORKLOAD; i++) {
+  for (i; i < workload; i++) {
     temp *= 2;
   }
 }
@@ -43,13 +45,13 @@ int main(int argc, char* argv[]){
   struct sched_param param;
 	param.sched_priority = PRIORITY;
   int policy = 0;
-  if (argv[1] == "RR") {
+  if (strncmp(argv[1], "RR", 2) == 0) {
     policy = SCHED_RR;
   }
-  else if (argv[1] == "FIFO") {
+  else if (strncmp(argv[1], "FIFO", 4) == 0) {
     policy = SCHED_FIFO;
   }
-  else if (argv[1] == "OTHER") {
+  else if (strncmp(argv[1], "OTHER", 5) == 0) {
     policy = SCHED_OTHER;
   }
   else {
@@ -60,22 +62,34 @@ int main(int argc, char* argv[]){
 		printf("failed to set");
 		return -1;
 	}
+  printf("Setting up timer\n");
   struct sigaction sa;
   sa.sa_handler = timer_handler;
-  sa.sa_mask = 0;
-  sa.sa_flags = 0;
+  sa.sa_flags = SA_RESTART;
   sigaction(SIGALRM, &sa, NULL);
 
   struct itimerval timer;
 
-  period = atoi(argc[3]);
+  period = atoi(argv[3]);
+  iterations = atoi(argv[4]);
+  printf("Period: %d\n", period);
+  timer.it_value.tv_sec = period;
+  timer.it_value.tv_usec = 0;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 0;
+  if (setitimer(ITIMER_REAL, &timer, NULL) == -1) {
+     printf("Setitimer failed\n");
+  }
+  printf("Start to perform work\n");
 
   while (1) {
     pause();
-    timer.it_value.tv_sec = 1;
+    timer.it_value.tv_sec = period;
     timer.it_value.tv_usec = 0;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
     setitimer(ITIMER_REAL, &timer, NULL);
-    work();
+    work(iterations);
   }
 
 }

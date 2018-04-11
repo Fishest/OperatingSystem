@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-const int SHARED_SIZE = 10
-const char* SHARED_NAME = "shared_memory"
+#define SHARED_SIZE 100000000
+const char* SHARED_NAME = "shared_memory";
 
 struct SharedData {
   volatile int write_guard;

@@ -1,0 +1,6 @@
+1: Zimu Wang, Wei Weng, Diqiu Zhou
+2.
+The task function is simply continuously multiplying numbers together to create work-bound
+situation.
+
+3.
