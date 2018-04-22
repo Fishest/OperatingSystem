@@ -1,0 +1,36 @@
+Zimu Wang, Wei Weng, Diqiu Zhou
+Generating matrices…
+      Multiplying matrices…
+      ^C
+3.   Generating matrices…
+      Multiplying matrices…
+      ^C^C^C^C^C^C^C^C^C^C^C^C^C^C^CMultiplication done!
+      14
+4.    2 different types of output were inspected:
+       i: 4998
+       i: 4999
+       4523 was possibly interrupted.
+       i: 3758
+       i: 3759
+       i: 3^C
+The reason behind this is because for the first output, SIGINT was sent when executing the program, and was hence handled by the program’s defined SIGINT handler, resulting in an increased called[i], and the program will execute to the end. In the case of the second output, SIGINT was handled by printf function, resulting in the interrupt, as the print statement of a line is not completed.
+5.   Output from dense_mm:
+      Generating matrices…
+      Multiplying matrices…
+      ^Chandler called
+      Multiplication done!
+Output from print5000:
+      2 different types of output were inspected:
+       i: 3185
+       ^Ci:4941
+       …
+       i: 4998
+       i: 4999
+       4940 was possibly interrupted.
+       i: 3940
+       i: 3941
+       i: ^C
+Problems: Possible data loss in print5000 when SIGINT is called due to the asynchronous nature of the SIGINT handler.
+
+	
+
