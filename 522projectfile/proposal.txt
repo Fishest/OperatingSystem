@@ -1,0 +1,30 @@
+1. Modify inotify_init, inotify_add_watch, and related inotify syscalls
+so that inotify can recursively watch all sub-directories. Specifically,
+we want to add some of the functionality of fanotify system to inotify.
+Fanotify allows recursive watches but is restrained in several ways to make
+inotify irreplaceable, and we are trying to add some of the advantages of 
+fanotify to inotify to make it better.
+
+2. Currently, if we want to monitor the sub-directories, we need to add
+a separate watch for each sub-directory. We want to modify inotify to
+allow it to monitor a directory and all its sub-directories at once.
+
+3. fs/notify/inotify/inotify_user.c
+fs/notify/inotify/inotify.h
+fs/notify/inotify/inotify_fsnotify.c
+
+4. inotify_event in uapi/linux/inotify.h
+
+5. None.
+
+6. Add a watch to a directory with one sub-directory. Check if creating,
+moving, copying files from or to the sub-directory can be detected by
+inotify.
+
+7. All will be written in C.
+
+8. Week 1: figure out how inotify works.
+Week 2: design our approach.
+Week 3: implement.
+Week 4: evaluation.
+Week 5: presentation and writeup.
